@@ -2,27 +2,10 @@ Observable = require "o_0"
 
 eventNames = """
   abort
-  error
-  resize
-  scroll
-  select
-  submit
-  change
-  reset
-  focus
   blur
+  change
   click
   dblclick
-  keydown
-  keypress
-  keyup
-  load
-  unload
-  mousedown
-  mousemove
-  mouseout
-  mouseover
-  mouseup
   drag
   dragend
   dragenter
@@ -30,6 +13,24 @@ eventNames = """
   dragover
   dragstart
   drop
+  error
+  focus
+  input
+  keydown
+  keypress
+  keyup
+  load
+  mousedown
+  mousemove
+  mouseout
+  mouseover
+  mouseup
+  reset
+  resize
+  scroll
+  select
+  submit
+  unload
 """.split("\n")
 
 isEvent = (name) ->
