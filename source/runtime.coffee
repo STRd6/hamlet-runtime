@@ -39,6 +39,30 @@ isEvent = (name) ->
 isFragment = (node) ->
   node.nodeType is 11
 
+valueBind = (element, value) ->
+  element.value = value()
+
+  # Because firing twice with the same value is idempotent just binding both
+  # oninput and onchange handles the widest range of inputs and browser
+  # inconsistencies.
+  element.oninput = ->
+    value(element.value)
+  element.onchange = ->
+    value(element.value)
+
+  value.observe? (newValue) ->
+    element.value = newValue
+
+  switch element.nodeName
+    when "SELECT"
+      # HACK: Need to set the value, but probably don't have the option contents yet
+      # so let's just do it after our execution suspends and we probably have them
+      setTimeout ->
+        element.value = value()
+      , 0
+
+  return
+
 Runtime = (context) ->
   stack = []
 
@@ -141,15 +165,18 @@ Runtime = (context) ->
   observeAttribute = (name, value) ->
     element = top()
 
+    update = (newValue) ->
+      if newValue? and newValue != false
+        element.setAttribute name, newValue
+      else
+        element.removeAttribute name
+
     if (name is "value") and (typeof value is "function")
-      element.value = value()
-
+      valueBind(element, value)
+    else if (name is "checked") and (typeof value is "function")
       element.onchange = ->
-        value(element.value)
-
-      if value.observe
-        value.observe (newValue) ->
-          element.value = newValue
+        value element.checked
+      bindObservable(element, value, update)
     # Straight up onclicks, etc.
     else if name.match(/^on/) and isEvent(name.substr(2))
       element[name] = value
@@ -157,9 +184,6 @@ Runtime = (context) ->
     else if isEvent(name)
       element["on#{name}"] = value
     else
-      update = (newValue) ->
-        element.setAttribute name, newValue
-
       bindObservable(element, value, update)
 
     return element
