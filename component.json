@@ -4,7 +4,6 @@
     "hamlet-runtime.js"
   ],
   "main": "hamlet-runtime.js",
-  "version": "0.6.0-pre.1",
   "homepage": "https://github.com/dr-coffee-labs/hamlet-runtime",
   "authors": [
     "Daniel X Moore <yahivin@gmail.com>"
@@ -16,5 +15,6 @@
   "license": "MIT",
   "dependencies": {
     "dr-coffee-labs/hamlet-runtime": "v0.6.0-pre.0"
-  }
+  },
+  "version": "0.6.0-pre.1"
 }
