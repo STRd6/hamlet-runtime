@@ -1,7 +1,4 @@
 describe "SELECT", ->
-  afterEach ->
-    empty document.body
-
   template = makeTemplate """
     %select(value=@value options=@options)
   """

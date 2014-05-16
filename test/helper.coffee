@@ -31,5 +31,7 @@ extend global,
 
   behave: (fragment, fn) ->
     document.body.appendChild fragment
-    fn()
-    empty document.body
+    try
+      fn()
+    finally
+      empty document.body
