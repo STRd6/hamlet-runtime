@@ -1,0 +1,14 @@
+describe "Random tags", ->
+  template = makeTemplate """
+    %duder
+    %yolo(radical=true)
+    %sandwiches(type=@type)
+  """
+  model =
+    type: Observable "ham"
+
+  it "should be have those tags and atrtibutes", ->
+    behave template(model), ->
+      assert Q "duder"
+      assert Q("yolo").getAttribute("radical")
+      assert.equal Q("sandwiches").getAttribute("type"), "ham"
