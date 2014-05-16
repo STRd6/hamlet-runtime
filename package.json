@@ -1,6 +1,6 @@
 {
   "name": "hamlet-runtime",
-  "version": "0.6.0-pre.4",
+  "version": "0.6.0-pre.5",
   "devDependencies": {
     "browserify": "^3.46.0",
     "coffee-script": "~1.6.3",
