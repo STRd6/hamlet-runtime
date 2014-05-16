@@ -229,10 +229,16 @@ Runtime = (context) ->
     # TODO: Consolidate special bindings better than if/else
     if (name is "value")
       valueBind(element, value)
-    else if (name is "checked") and (typeof value is "function")
-      element.onchange = ->
+    else if (name is "checked")
+      value = Observable value
+
+      element.oninput = element.onchange = ->
         value element.checked
-      bindObservable(element, value, update)
+
+      update = (newValue) ->
+        element.checked = newValue
+      update value()
+      value.observe update
     else if binding = specialBindings[nodeName]?[name]
       binding(element, value)
     # Straight up onclicks, etc.
