@@ -46,8 +46,41 @@ describe "SELECT", ->
         assert.equal Q("select")._value, model.value
 
   describe "with an observable array for options", ->
-    it "should add options added to the observable array"
-    it "should remove options removed from the observable array"
+    it "should add options added to the observable array", ->
+      options = Observable [
+        {name: "Napoleon", date: "1850 AD"}
+        {name: "Barrack", date: "1995 AD"}
+      ]
+      model =
+        options: options
+        value: options.get(0)
+      behave template(model), ->
+        assert.equal all("option").length, 2
+        options.push name: "Test", date: "2014 AD"
+        assert.equal all("option").length, 3
+    it "should remove options removed from the observable array", ->
+      options = Observable [
+        {name: "Napoleon", date: "1850 AD"}
+        {name: "Barrack", date: "1995 AD"}
+      ]
+      model =
+        options: options
+        value: options.get(0)
+      behave template(model), ->
+        assert.equal all("option").length, 2
+        options.remove options.get(0)
+        assert.equal all("option").length, 1
+    it "should have it's value set", ->
+      options = Observable [
+        {name: "Napoleon", date: "1850 AD"}
+        {name: "Barrack", date: "1995 AD"}
+      ]
+      model =
+        options: options
+        value: options.get(0)
+      behave template(model), ->
+        # TODO: This isn't a great check
+        assert.equal Q("select")._value, model.value
   describe "with an object for options", ->
     it "should have an option for each key"
 
