@@ -45,8 +45,8 @@ isEvent = (name) ->
 isFragment = (node) ->
   node?.nodeType is 11
 
-valueBind = (element, value) ->
-  value = Observable value
+valueBind = (element, value, context) ->
+  value = Observable value, context
 
   switch element.nodeName
     when "SELECT"
@@ -78,23 +78,23 @@ valueBind = (element, value) ->
       element.oninput = element.onchange = ->
         value(element.value)
 
-      bindObservable element, value, (newValue) ->
+      bindObservable element, value, context, (newValue) ->
         element.value = newValue
 
   return
 
 specialBindings =
   INPUT:
-    checked: (element, value) ->
+    checked: (element, value, context) ->
       element.oninput = element.onchange = ->
         value? element.checked
 
-      bindObservable element, value, (newValue) ->
+      bindObservable element, value, context, (newValue) ->
         element.checked = newValue
   SELECT:
-    options: (element, values) ->
+    options: (element, values, context) ->
       # TODO: Figure out a way to use bindObservable here to consolidate our leak prevention
-      values = Observable values
+      values = Observable values, context
 
       updateValues = (values) ->
         empty(element)
@@ -120,8 +120,8 @@ specialBindings =
       updateValues values()
       values.observe updateValues
 
-bindObservable = (element, value, update) ->
-  observable = Observable(value)
+bindObservable = (element, value, context, update) ->
+  observable = Observable(value, context)
   update observable()
 
   observe = ->
@@ -198,7 +198,7 @@ Runtime = (context) ->
 
       possibleValues[possibleValues.length-1]
 
-    bindObservable(element, value, update)
+    bindObservable(element, value, context, update)
 
   classes = (sources...) ->
     element = top()
@@ -220,7 +220,7 @@ Runtime = (context) ->
 
       possibleValues.join(" ")
 
-    bindObservable(element, value, update)
+    bindObservable(element, value, context, update)
 
   observeAttribute = (name, value) ->
     element = top()
@@ -239,7 +239,7 @@ Runtime = (context) ->
     else if isEvent(name)
       element["on#{name}"] = value
     else
-      bindObservable element, value, (newValue) ->
+      bindObservable element, value, context, (newValue) ->
         if newValue? and newValue != false
           element.setAttribute name, newValue
         else
@@ -265,7 +265,7 @@ Runtime = (context) ->
     update = (newValue) ->
       element.nodeValue = newValue
 
-    bindObservable element, value, update
+    bindObservable element, value, context, update
 
     render element
 
@@ -283,7 +283,7 @@ Runtime = (context) ->
       ; # TODO self.filters[name](content)
 
     each: (items, fn) ->
-      items = Observable(items)
+      items = Observable(items, context)
       elements = null
       parent = lastParent()
 
