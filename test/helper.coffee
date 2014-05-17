@@ -22,7 +22,7 @@ extend global,
     document.querySelectorAll(args...)
 
   makeTemplate: (code) ->
-    compiled = compile code
+    compiled = compile code, runtime: "Runtime"
     Function("Runtime", "return " + compiled)(Runtime)
 
   empty: (node) ->

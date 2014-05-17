@@ -4,7 +4,7 @@
   "devDependencies": {
     "browserify": "^3.46.0",
     "coffee-script": "~1.6.3",
-    "hamlet-compiler": "~0.6.0",
+    "hamlet-compiler": "~0.6.0-pre.3",
     "jsdom": "^0.10.5",
     "mocha": "~1.12.0",
     "uglify-js": "~2.3.6"
