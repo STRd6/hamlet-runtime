@@ -138,6 +138,10 @@ bindObservable = (element, value, context, update) ->
 
   return element
 
+bindEvent = (element, name, fn, context) ->
+  element[name] = ->
+    fn.apply(context, arguments)
+
 Runtime = (context) ->
   stack = []
 
@@ -234,10 +238,10 @@ Runtime = (context) ->
       binding(element, value, context)
     # Straight up onclicks, etc.
     else if name.match(/^on/) and isEvent(name.substr(2))
-      element[name] = value
+      bindEvent(element, name, value, context)
     # Handle click=@method
     else if isEvent(name)
-      element["on#{name}"] = value
+      bindEvent(element, "on#{name}", value, context)
     else
       bindObservable element, value, context, (newValue) ->
         if newValue? and newValue != false
