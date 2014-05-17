@@ -50,10 +50,10 @@ valueBind = (element, value) ->
 
   switch element.nodeName
     when "SELECT"
+      # TODO: Figure out a way to use bindObservable in here to consolidate our leak prevention
       updateSelected = (newValue) ->
         # This is so we can hold a non-string object as a value of the select element
         element._value = newValue
-
 
         if (options = element._options) and (typeof newValue is "object")
           if newValue.value?
@@ -72,24 +72,28 @@ valueBind = (element, value) ->
       updateSelected(value())
       value.observe updateSelected
     else
-      element.value = value()
-
       # Because firing twice with the same value is idempotent just binding both
       # oninput and onchange handles the widest range of inputs and browser
       # inconsistencies.
-      element.oninput = ->
-        value(element.value)
-      element.onchange = ->
+      element.oninput = element.onchange = ->
         value(element.value)
 
-      value.observe (newValue) ->
+      bindObservable element, value, (newValue) ->
         element.value = newValue
 
   return
 
 specialBindings =
+  INPUT:
+    checked: (element, value) ->
+      element.oninput = element.onchange = ->
+        value? element.checked
+
+      bindObservable element, value, (newValue) ->
+        element.checked = newValue
   SELECT:
     options: (element, values) ->
+      # TODO: Figure out a way to use bindObservable here to consolidate our leak prevention
       values = Observable values
 
       updateValues = (values) ->
@@ -223,25 +227,9 @@ Runtime = (context) ->
 
     {nodeName} = element
 
-    update = (newValue) ->
-      if newValue? and newValue != false
-        element.setAttribute name, newValue
-      else
-        element.removeAttribute name
-
     # TODO: Consolidate special bindings better than if/else
     if (name is "value")
       valueBind(element, value)
-    else if (name is "checked")
-      value = Observable value
-
-      element.oninput = element.onchange = ->
-        value element.checked
-
-      update = (newValue) ->
-        element.checked = newValue
-      update value()
-      value.observe update
     else if binding = specialBindings[nodeName]?[name]
       binding(element, value)
     # Straight up onclicks, etc.
@@ -251,7 +239,11 @@ Runtime = (context) ->
     else if isEvent(name)
       element["on#{name}"] = value
     else
-      bindObservable(element, value, update)
+      bindObservable element, value, (newValue) ->
+        if newValue? and newValue != false
+          element.setAttribute name, newValue
+        else
+          element.removeAttribute name
 
     return element
 
