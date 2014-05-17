@@ -269,6 +269,14 @@ Runtime = (context) ->
 
     render element
 
+  withContext = (newContext, fn) ->
+    oldContext = context
+    context = newContext
+    try
+      fn()
+    finally
+      context = oldContext
+
   self =
     # Pushing and popping creates the node tree
     push: push
@@ -294,7 +302,10 @@ Runtime = (context) ->
       replace = (oldElements) ->
         elements = []
         items.each (item, index, array) ->
-          element = fn.call(item, item, index, array)
+          element = null
+
+          withContext item, ->
+            element = fn.call(item, item, index, array)
 
           if isFragment(element)
             elements.push element.childNodes...
