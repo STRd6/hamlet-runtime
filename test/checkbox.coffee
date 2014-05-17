@@ -23,8 +23,6 @@ describe "Checkbox", ->
 
       behave template(model), ->
         assert.equal Q("input").checked, false, "Should not be checked"
-        # model.checked.observe (newValue) ->
-        #   assert.equal newValue, true, "Observing true!"
         model.checked true
         assert.equal Q("input").checked, true, "Should be checked"
         model.checked false
