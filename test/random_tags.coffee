@@ -12,3 +12,9 @@ describe "Random tags", ->
       assert Q "duder"
       assert Q("yolo").getAttribute("radical")
       assert.equal Q("sandwiches").getAttribute("type"), "ham"
+
+  it "should reflect changes in observables", ->
+    behave template(model), ->
+      assert.equal Q("sandwiches").getAttribute("type"), "ham"
+      model.type "pastrami"
+      assert.equal Q("sandwiches").getAttribute("type"), "pastrami"

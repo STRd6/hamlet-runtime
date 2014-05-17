@@ -43,7 +43,7 @@ isEvent = (name) ->
   eventNames.indexOf(name) != -1
 
 isFragment = (node) ->
-  node.nodeType is 11
+  node?.nodeType is 11
 
 valueBind = (element, value) ->
   value = Observable value
@@ -116,6 +116,24 @@ specialBindings =
       updateValues values()
       values.observe updateValues
 
+bindObservable = (element, value, update) ->
+  observable = Observable(value)
+  update observable()
+
+  observe = ->
+    observable.observe update
+    update observable()
+
+  unobserve = ->
+    observable.stopObserving update
+
+  # We want to keep our binding active whenever the element is in the DOM
+  # but clean up when the element leaves the DOM
+  element.addEventListener("DOMNodeInserted", observe)
+  element.addEventListener("DOMNodeRemoved", unobserve)
+
+  return element
+
 Runtime = (context) ->
   stack = []
 
@@ -141,6 +159,7 @@ Runtime = (context) ->
     if parent and isFragment(child) and child.childNodes.length is 1
       child = child.childNodes[0]
 
+    # TODO: We shouldn't have to use this soak
     top()?.appendChild(child)
 
     return child
@@ -154,22 +173,6 @@ Runtime = (context) ->
   render = (child) ->
     push(child)
     pop()
-
-  bindObservable = (element, value, update) ->
-    observable = Observable(value)
-    update observable()
-
-    observe = ->
-      observable.observe update
-      update observable()
-
-    unobserve = ->
-      observable.stopObserving update
-
-    element.addEventListener("DOMNodeInserted", observe, true)
-    element.addEventListener("DOMNodeRemoved", unobserve, true)
-
-    return element
 
   id = (sources...) ->
     element = top()
