@@ -231,7 +231,7 @@ Runtime = (context) ->
     if (name is "value")
       valueBind(element, value)
     else if binding = specialBindings[nodeName]?[name]
-      binding(element, value)
+      binding(element, value, context)
     # Straight up onclicks, etc.
     else if name.match(/^on/) and isEvent(name.substr(2))
       element[name] = value
