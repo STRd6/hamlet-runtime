@@ -83,7 +83,7 @@ valueBind = (element, value, context) ->
 specialBindings =
   INPUT:
     checked: (element, value, context) ->
-      element.oninput = element.onchange = ->
+      element.onchange = ->
         value? element.checked
 
       bindObservable element, value, context, (newValue) ->
