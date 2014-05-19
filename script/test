@@ -4,5 +4,6 @@ set -e
 node_modules/.bin/mocha \
   --compilers coffee:coffee-script \
   --reporter spec \
+  --require 'coffee-script/register' \
   --require test/helper.coffee \
   "$@"
