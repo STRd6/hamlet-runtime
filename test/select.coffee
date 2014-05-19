@@ -3,15 +3,36 @@ describe "SELECT", ->
     %select(value=@value options=@options)
   """
   describe "with an array of basic types for options", ->
-    model =
-      options: [1, 2, 3]
-      value: 2
     it "should generate options", ->
+      model =
+        options: [1, 2, 3]
+        value: 2
       behave template(model), ->
         assert.equal all("option").length, model.options.length
     it "should have it's value set", ->
+      model =
+        options: [1, 2, 3]
+        value: 2
       behave template(model), ->
         assert.equal Q("select").value, model.value
+
+    it "should pass the option to the value binding on a change event", (done) ->
+      model =
+        options: [1, 2, 3]
+        value: Observable(1)
+
+      model.value.observe (value) ->
+        # NOTE: The value is a memebr of the options array
+        assert typeof value is "number"
+        assert.equal value, 3
+        done()
+
+      behave template(model), ->
+        select = Q("select")
+        # NOTE: To simulate a selection by choosing value you must pass a string
+        select.value = "3"
+        assert.equal select.value, "3"
+        Q("select").onchange()
 
   describe "with an array of objects for options", ->
     options = [
@@ -41,6 +62,20 @@ describe "SELECT", ->
       behave template(model), ->
         # TODO: This isn't a great check
         assert.equal Q("select")._value, model.value
+
+    it "should trigger a call to value binding when changing", (done) ->
+      model =
+        options: options
+
+      model.value = Observable options[0], model
+      model.value.observe (v) ->
+        assert v.name is "wat"
+        done()
+
+      behave template(model), ->
+        # Simulate a selection
+        Q("select").value = "noice"
+        Q("select").onchange()
 
   describe "with objects that have an observable name property", ->
     it "should observe the name as the text of the value options", ->
