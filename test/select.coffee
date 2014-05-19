@@ -42,6 +42,21 @@ describe "SELECT", ->
         # TODO: This isn't a great check
         assert.equal Q("select")._value, model.value
 
+  describe "with objects that have an observable name property", ->
+    it "should observe the name as the text of the value options", ->
+      options = Observable [
+        {name: Observable("Napoleon"), date: "1850 AD"}
+        {name: Observable("Barrack"), date: "1995 AD"}
+      ]
+      model =
+        options: options
+        value: options.get(0)
+
+      behave template(model), ->
+        assert.equal all("option")[0].textContent, "Napoleon"
+        options.get(0).name("Yolo")
+        assert.equal all("option")[0].textContent, "Yolo"
+
   describe "with an observable array for options", ->
     it "should add options added to the observable array", ->
       options = Observable [

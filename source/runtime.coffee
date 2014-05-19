@@ -93,7 +93,6 @@ specialBindings =
         element.checked = newValue
   SELECT:
     options: (element, values, context) ->
-      # TODO: Figure out a way to use bindObservable here to consolidate our leak prevention
       values = Observable values, context
 
       updateValues = (values) ->
@@ -101,7 +100,6 @@ specialBindings =
         element._options = values
 
         # TODO: Handle key: value... style options
-        # TODO: Should be able to leverage more of the runtime for binding observables here
         values.map (value, index) ->
           option = document.createElement("option")
           option._value = value
@@ -110,15 +108,17 @@ specialBindings =
           else
             option.value = value
 
-          option.textContent = value?.name or value
+          name = value?.name or value
+
+          bindObservable option, name, value, (newValue) ->
+            option.textContent = newValue
 
           element.appendChild option
           element.selectedIndex = index if value is element._value
 
           return option
 
-      updateValues values()
-      values.observe updateValues
+      bindObservable element, values, context, updateValues
 
 bindObservable = (element, value, context, update) ->
   observable = Observable(value, context)
@@ -133,8 +133,8 @@ bindObservable = (element, value, context, update) ->
 
   # We want to keep our binding active whenever the element is in the DOM
   # but clean up when the element leaves the DOM
-  element.addEventListener("DOMNodeInserted", observe)
-  element.addEventListener("DOMNodeRemoved", unobserve)
+  element.addEventListener("DOMNodeInsertedIntoDocument", observe)
+  element.addEventListener("DOMNodeRemovedFromDocument", unobserve)
 
   return element
 
