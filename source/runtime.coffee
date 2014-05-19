@@ -213,18 +213,19 @@ Runtime = (context) ->
 
       element.className = newValue
 
-    value = ->
-      possibleValues = sources.map (source) ->
-        if typeof source is "function"
-          source()
-        else
-          source
-      .filter (sourceValue) ->
-        sourceValue?
+    do (context) ->
+      value = ->
+        possibleValues = sources.map (source) ->
+          if typeof source is "function"
+            source.call(context)
+          else
+            source
+        .filter (sourceValue) ->
+          sourceValue?
 
-      possibleValues.join(" ")
+        possibleValues.join(" ")
 
-    bindObservable(element, value, context, update)
+      bindObservable(element, value, context, update)
 
   observeAttribute = (name, value) ->
     element = top()
