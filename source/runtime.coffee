@@ -104,13 +104,15 @@ specialBindings =
           option = document.createElement("option")
           option._value = value
           if typeof value is "object"
-            option.value = value?.value or index
+            optionValue = value?.value or index
           else
-            option.value = value
+            optionValue = value
 
-          name = value?.name or value
+          bindObservable option, optionValue, value, (newValue) ->
+            option.value = newValue
 
-          bindObservable option, name, value, (newValue) ->
+          optionName = value?.name or value
+          bindObservable option, optionName, value, (newValue) ->
             option.textContent = newValue
 
           element.appendChild option
