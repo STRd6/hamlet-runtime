@@ -50,27 +50,24 @@ valueBind = (element, value, context) ->
 
   switch element.nodeName
     when "SELECT"
-      # TODO: Figure out a way to use bindObservable in here to consolidate our leak prevention
-      updateSelected = (newValue) ->
+      element.oninput = element.onchange = ->
+        {value:optionValue, _value} = @children[@selectedIndex]
+
+        value(_value or optionValue)
+
+      update = (newValue) ->
         # This is so we can hold a non-string object as a value of the select element
         element._value = newValue
 
-        if (options = element._options) and (typeof newValue is "object")
+        if (options = element._options)
           if newValue.value?
-            element.value = newValue.value
+            element.value = newValue.value?() or newValue.value
           else
             element.selectedIndex = options.indexOf(newValue)
         else
           element.value = newValue
 
-      update = ->
-        {value:optionValue, _value} = @children[@selectedIndex]
-
-        value(_value or optionValue)
-
-      element.oninput = element.onchange = update
-      updateSelected(value())
-      value.observe updateSelected
+      bindObservable element, value, context, update
     else
       # Because firing twice with the same value is idempotent just binding both
       # oninput and onchange handles the widest range of inputs and browser
