@@ -34,6 +34,24 @@ describe "SELECT", ->
         assert.equal select.value, "3"
         Q("select").onchange()
 
+  it "should get the correct value when another bound input changes", ->
+    t = makeTemplate("""
+      %select(@value @options)
+      %input(@value)
+    """)
+    m =
+      options: [1, 2, 3]
+      value: Observable 2
+    behave t(m), ->
+      input = Q("input")
+
+      input.value = "3"
+      input.oninput()
+      assert.equal m.value(), 3
+
+      assert.equal Q("select").value, 3
+
+
   describe "with an array of objects for options", ->
     options = [
         {name: "yolo", value: "badical"}

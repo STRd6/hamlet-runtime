@@ -63,7 +63,13 @@ valueBind = (element, value, context) ->
           if newValue.value?
             element.value = newValue.value?() or newValue.value
           else
-            element.selectedIndex = options.indexOf(newValue)
+            if typeof newValue is "object"
+              selectedIndex = options.indexOf(newValue)
+            else
+              optionValues = Array::map.call(element.options, (o) -> o._value.toString())
+              selectedIndex = optionValues.indexOf(newValue)
+
+            element.selectedIndex = selectedIndex
         else
           element.value = newValue
 
@@ -103,7 +109,7 @@ specialBindings =
           if typeof value is "object"
             optionValue = value?.value or index
           else
-            optionValue = value
+            optionValue = value.toString()
 
           bindObservable option, optionValue, value, (newValue) ->
             option.value = newValue
