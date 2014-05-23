@@ -127,7 +127,7 @@ specialBindings =
 
 bindObservable = (element, value, context, update) ->
   observable = Observable(value, context)
-  update observable()
+  # update observable()
 
   observe = ->
     observable.observe update
@@ -136,10 +136,14 @@ bindObservable = (element, value, context, update) ->
   unobserve = ->
     observable.stopObserving update
 
+  observe()
+
+  # TODO: This may have trouble in some browsers...
+  # TODO: Find a better way to clean up
   # We want to keep our binding active whenever the element is in the DOM
   # but clean up when the element leaves the DOM
-  element.addEventListener("DOMNodeInsertedIntoDocument", observe)
-  element.addEventListener("DOMNodeRemovedFromDocument", unobserve)
+  # element.addEventListener("DOMNodeInsertedIntoDocument", observe)
+  # element.addEventListener("DOMNodeRemovedFromDocument", unobserve)
 
   return element
 
