@@ -61,15 +61,10 @@ valueBind = (element, value, context) ->
 
         if (options = element._options)
           if newValue.value?
+            # TODO: Handle observable value attributes
             element.value = newValue.value?() or newValue.value
           else
-            if typeof newValue is "object"
-              selectedIndex = options.indexOf(newValue)
-            else
-              optionValues = Array::map.call(element.options, (o) -> o._value.toString())
-              selectedIndex = optionValues.indexOf(newValue)
-
-            element.selectedIndex = selectedIndex
+            element.selectedIndex = valueIndexOf options, newValue
         else
           element.value = newValue
 
@@ -342,3 +337,20 @@ module.exports = Runtime
 
 empty = (node) ->
   node.removeChild(child) while child = node.firstChild
+
+# A helper to find the index of a value in an array of options
+# when the array may contain actual objects or strings, numbers, etc.
+
+# NOTE: This may be too complicated, the core issue is that anything coming from an input
+# will be a string, and anything coming from a regular observable can be any object type.
+# Possible solutions:
+#   Typed observables that auto-convert strings to the correct type.
+#   OR
+#   Always compare non-object inputs as strings.
+valueIndexOf = (options, value) ->
+  if typeof value is "object"
+    options.indexOf(newValue)
+  else
+    options.map (option) ->
+      option.toString()
+    .indexOf value.toString()

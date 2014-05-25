@@ -42,6 +42,7 @@ describe "SELECT", ->
     m =
       options: [1, 2, 3]
       value: Observable 2
+
     behave t(m), ->
       input = Q("input")
 
@@ -51,6 +52,8 @@ describe "SELECT", ->
 
       assert.equal Q("select").value, 3
 
+      m.value 1
+      assert.equal Q("select").value, 1
 
   describe "with an array of objects for options", ->
     options = [
