@@ -257,14 +257,17 @@ Runtime = (context) ->
     return element
 
   observeText = (value) ->
+    value = Observable value, context
+
     # Kind of a hack for handling sub renders
     # or adding explicit html nodes to the output
     # TODO: May want to make more sure that it's a real dom node
     #       and not some other object with a nodeType property
     # TODO: This shouldn't be inside of the observeText method
-    switch value?.nodeType
+    # TODO: Think about how this should work with observable nodes
+    switch value()?.nodeType
       when 1, 3, 11
-        return render(value)
+        return render(value())
 
     # HACK: We don't really want to know about the document inside here.
     # Creating our text nodes in here cleans up the external call
