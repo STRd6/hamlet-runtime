@@ -349,7 +349,7 @@ empty = (node) ->
 #   Always compare non-object inputs as strings.
 valueIndexOf = (options, value) ->
   if typeof value is "object"
-    options.indexOf(newValue)
+    options.indexOf(value)
   else
     options.map (option) ->
       option.toString()

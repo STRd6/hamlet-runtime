@@ -98,6 +98,24 @@ describe "SELECT", ->
         Q("select").value = "noice"
         Q("select").onchange()
 
+  describe "An observable array of objects without value properties", ->
+    options = Observable [
+      {name: "foo"}
+      {name: "bar"}
+      {name: "baz"}
+    ]
+
+    model =
+      options: Observable options
+      value: Observable options[0]
+
+    it "should update the selected item when the model changes and the options don't have value properties", ->
+      behave template(model), ->
+        assert.equal Q("select").selectedIndex, 0
+        model.value model.options.get(1)
+        assert.equal Q("select").selectedIndex, 1
+
+
   describe "with objects that have an observable name property", ->
     it "should observe the name as the text of the value options", ->
       options = Observable [
