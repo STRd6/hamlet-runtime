@@ -325,8 +325,7 @@ Runtime = (context) ->
 
           return element
 
-        oldElements?.forEach (element) ->
-          element.remove()
+        oldElements?.forEach remove
 
       replace(null, items)
 
@@ -354,3 +353,7 @@ valueIndexOf = (options, value) ->
     options.map (option) ->
       option.toString()
     .indexOf value.toString()
+
+remove = (element) ->
+  # TODO: Unbind any events to prevent leaks
+  element.parentNode?.removeChild(element)
