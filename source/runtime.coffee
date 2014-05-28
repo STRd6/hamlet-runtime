@@ -133,18 +133,23 @@ bindObservable = (element, value, context, update) ->
 
   observe()
 
-  # TODO: This may have trouble in some browsers...
-  # TODO: Find a better way to clean up
-  # We want to keep our binding active whenever the element is in the DOM
-  # but clean up when the element leaves the DOM
-  # element.addEventListener("DOMNodeInsertedIntoDocument", observe)
-  # element.addEventListener("DOMNodeRemovedFromDocument", unobserve)
+  (element._hamlet_cleanup ||= []).push unobserve
 
   return element
 
 bindEvent = (element, name, fn, context) ->
   element[name] = ->
     fn.apply(context, arguments)
+
+cleanup = (element) ->
+  Array::forEach.call element.children, cleanup
+
+  element._hamlet_cleanup?.forEach (method) ->
+    method()
+
+  delete element._hamlet_cleanup
+
+  return
 
 Runtime = (context) ->
   stack = []
@@ -358,5 +363,7 @@ valueIndexOf = (options, value) ->
     .indexOf value.toString()
 
 remove = (element) ->
-  # TODO: Unbind any events to prevent leaks
+  cleanup element
   element.parentNode?.removeChild(element)
+
+  return
