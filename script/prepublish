@@ -1,6 +1,8 @@
 #!/bin/bash
 set -e
 
+script/test
+
 # normal files
 ./node_modules/.bin/coffee -co dist/ source/
 
