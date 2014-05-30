@@ -261,6 +261,8 @@ Runtime = (context) ->
 
     return element
 
+  # TODO: This is getting a little out of hand with complexity
+  # switching out text/render would be a smart move
   observeText = (value) ->
     value = Observable value, context
 
@@ -273,6 +275,11 @@ Runtime = (context) ->
     switch value()?.nodeType
       when 1, 3, 11
         return render(value())
+
+    # TODO: One more hack to handle lists of nodes
+    switch value()?[0]?.nodeType
+      when 1, 3, 11
+        return value.each render
 
     # HACK: We don't really want to know about the document inside here.
     # Creating our text nodes in here cleans up the external call
