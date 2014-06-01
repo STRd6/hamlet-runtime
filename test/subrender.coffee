@@ -1,7 +1,7 @@
 describe "subrender", ->
   template = makeTemplate """
     %div
-      = @generateItem()
+      = @generateItem
   """
 
   it "should render elements in-line", ->
@@ -24,3 +24,36 @@ describe "subrender", ->
     behave template(model), ->
       assert all("li").length, 2
       assert all("p").length, 1
+
+  it "should work with a node with children", ->
+    model =
+      generateItem: ->
+        div = document.createElement "div"
+
+        div.innerHTML = "<p>Yo</p><ol><li>Yolo</li><li>Broheim</li></ol>"
+
+        div
+
+    behave template(model), ->
+      assert all("li").length, 2
+      assert all("p").length, 1
+      assert all("ol").length, 1
+
+  it "should work with observables", ->
+    model =
+      name: Observable "wat"
+      generateItem: ->
+        item = document.createElement("li")
+
+        item.textContent = @name()
+
+        item
+
+    behave template(model), ->
+      assert.equal all("li").length, 1
+
+      assert.equal Q("li").textContent, "wat"
+
+      model.name "yo"
+
+      assert.equal Q("li").textContent, "yo"

@@ -1,6 +1,6 @@
 {
   "name": "hamlet-runtime",
-  "version": "0.6.0-pre.5",
+  "version": "0.6.0-pre.6",
   "devDependencies": {
     "browserify": "^3.46.0",
     "coffee-script": "~1.7.1",
@@ -10,7 +10,7 @@
     "uglify-js": "~2.3.6"
   },
   "dependencies": {
-    "o_0": "0.2.0-pre.3"
+    "o_0": "0.2.0-pre.6"
   },
   "repository": {
     "type": "git",

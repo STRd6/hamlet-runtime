@@ -45,6 +45,17 @@ isEvent = (name) ->
 isFragment = (node) ->
   node?.nodeType is 11
 
+# TODO: Make sure to handle rendering multiple sibling contents correctly
+# currently just crushes the others
+contentBind = (element, value, context) ->
+  update = ->
+    empty(element)
+    # Attach contents
+    value.each (item) ->
+      element.appendChild(item)
+
+  bindObservable element, value, context, update
+
 valueBind = (element, value, context) ->
   value = Observable value, context
 
@@ -122,7 +133,6 @@ specialBindings =
 
 bindObservable = (element, value, context, update) ->
   observable = Observable(value, context)
-  # update observable()
 
   observe = ->
     observable.observe update
@@ -274,12 +284,12 @@ Runtime = (context) ->
     # TODO: Think about how this should work with observable nodes
     switch value()?.nodeType
       when 1, 3, 11
-        return render(value())
+        return contentBind top(), value, context
 
     # TODO: One more hack to handle lists of nodes
     switch value()?[0]?.nodeType
       when 1, 3, 11
-        return value.each render
+        return contentBind top(), value, context
 
     # HACK: We don't really want to know about the document inside here.
     # Creating our text nodes in here cleans up the external call
