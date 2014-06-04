@@ -45,16 +45,27 @@ isEvent = (name) ->
 isFragment = (node) ->
   node?.nodeType is 11
 
-# TODO: Make sure to handle rendering multiple sibling contents correctly
-# currently just crushes the others
-contentBind = (element, value, context) ->
+initContent = (element) ->
+  return element._hamlet_content if element._hamlet_content
+
+  allContent = (element._hamlet_content ?= Observable.concat())
+
   update = ->
+    # TODO: Make sure we're not wiping out any binding we wanted to keep
     empty(element)
-    # Attach contents
-    value.each (item) ->
+    allContent.each (item) ->
       element.appendChild(item)
 
-  bindObservable element, value, context, update
+  bindObservable element, allContent, null, update
+
+  return allContent
+
+# TODO: Make sure to handle rendering multiple sibling contents correctly
+# currently just crushes the others
+contentBind = (element, value) ->
+  initContent(element).push value
+
+  return element
 
 valueBind = (element, value, context) ->
   value = Observable value, context
@@ -172,8 +183,9 @@ Runtime = (context) ->
 
     element
 
+  contextTop = undefined
   top = ->
-    stack[stack.length-1]
+    stack[stack.length-1] or contextTop
 
   append = (child) ->
     parent = top()
@@ -183,7 +195,7 @@ Runtime = (context) ->
     # because they are appended to the parent before we return
     # By appending and returning the child instead we should be able to
     # keep a reference to the actual elements
-    if parent and isFragment(child) and child.childNodes.length is 1
+    if isFragment(child) and child.childNodes.length is 1
       child = child.childNodes[0]
 
     # TODO: We shouldn't have to use this soak
@@ -274,23 +286,6 @@ Runtime = (context) ->
   # TODO: This is getting a little out of hand with complexity
   # switching out text/render would be a smart move
   observeText = (value) ->
-    value = Observable value, context
-
-    # Kind of a hack for handling sub renders
-    # or adding explicit html nodes to the output
-    # TODO: May want to make more sure that it's a real dom node
-    #       and not some other object with a nodeType property
-    # TODO: This shouldn't be inside of the observeText method
-    # TODO: Think about how this should work with observable nodes
-    switch value()?.nodeType
-      when 1, 3, 11
-        return contentBind top(), value, context
-
-    # TODO: One more hack to handle lists of nodes
-    switch value()?[0]?.nodeType
-      when 1, 3, 11
-        return contentBind top(), value, context
-
     # HACK: We don't really want to know about the document inside here.
     # Creating our text nodes in here cleans up the external call
     # so it may be worth it.
@@ -303,13 +298,42 @@ Runtime = (context) ->
 
     render element
 
-  withContext = (newContext, fn) ->
+  withContext = (newContext, newContextTop, fn) ->
     oldContext = context
     context = newContext
+
+    contextTop = newContextTop
     try
       fn()
     finally
+      contextTop = undefined
       context = oldContext
+
+  buffer = (value) ->
+    # TODO: context isn't the same when this is updated from an observable
+    value = Observable value, context
+
+    if typeof value() is "string"
+      return observeText(value)
+
+    # Kind of a hack for handling sub renders
+    # or adding explicit html nodes to the output
+    # TODO: May want to make more sure that it's a real dom node
+    #       and not some other object with a nodeType property
+    # TODO: Think about how this should work with observable nodes
+    switch value()?.nodeType
+      when 1, 3, 11
+        # TODO: top() isn't the same when this is updated from an observable!
+        contentBind top(), value
+
+        # TODO: Hack so this works with each
+        return value()
+
+    # TODO: One more hack to handle lists of nodes
+    switch value()?[0]?.nodeType
+      when 1, 3, 11
+        # TODO: Currently is broken when used with `each`
+        return contentBind top(), value
 
   self =
     # Pushing and popping creates the node tree
@@ -319,7 +343,8 @@ Runtime = (context) ->
     id: id
     classes: classes
     attribute: observeAttribute
-    text: observeText
+    # TODO: Rename `text` to `buffer`
+    text: buffer
 
     filter: (name, content) ->
       ; # TODO self.filters[name](content)
@@ -338,7 +363,7 @@ Runtime = (context) ->
         items.each (item, index, array) ->
           element = null
 
-          withContext item, ->
+          withContext item, parent, ->
             element = fn.call(item, item, index, array)
 
           if isFragment(element)
