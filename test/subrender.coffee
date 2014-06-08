@@ -1,4 +1,25 @@
 describe "subrender", ->
+  describe "rendering simple text", ->
+    template = makeTemplate """
+      %span.count= @count
+    """
+
+    it "should render numbers as strings", ->
+      model =
+        count: 5
+
+      behave template(model), ->
+        assert.equal Q(".count").textContent, "5"
+
+    it "should update when observable changes", ->
+      model =
+        count: Observable 5
+
+      behave template(model), ->
+        assert.equal Q(".count").textContent, "5"
+        model.count 2
+        assert.equal Q(".count").textContent, "2"
+
   describe "with root node", ->
     template = makeTemplate """
       %div

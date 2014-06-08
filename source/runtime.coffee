@@ -313,9 +313,6 @@ Runtime = (context) ->
     # TODO: context isn't the same when this is updated from an observable
     value = Observable value, context
 
-    if typeof value() is "string"
-      return observeText(value)
-
     # Kind of a hack for handling sub renders
     # or adding explicit html nodes to the output
     # TODO: May want to make more sure that it's a real dom node
@@ -334,6 +331,8 @@ Runtime = (context) ->
       when 1, 3, 11
         # TODO: Currently is broken when used with `each`
         return contentBind top(), value
+
+    return observeText(value)
 
   self =
     # Pushing and popping creates the node tree
