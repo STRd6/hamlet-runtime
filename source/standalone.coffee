@@ -1,1 +1,0 @@
-global.Hamlet = require "./runtime"
