@@ -3,6 +3,8 @@ extend = (target, sources...) ->
     for name of source
       target[name] = source[name]
 
+CoffeeScript = require "coffee-script"
+
 {compile} = require "hamlet-compiler"
 Runtime = require "../source/runtime"
 Observable = Runtime.Observable
@@ -22,7 +24,11 @@ extend global,
     document.querySelectorAll(args...)
 
   makeTemplate: (code) ->
-    compiled = compile code, runtime: "Runtime"
+    compiled = compile code,
+      runtime: "Runtime"
+      compiler: CoffeeScript
+      exports: false
+
     Function("Runtime", "return " + compiled)(Runtime)
 
   empty: (node) ->

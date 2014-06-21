@@ -1,4 +1,10 @@
 #!/bin/bash
 
-./node_modules/.bin/browserify dist/runtime.js --standalone Hamlet -o component/hamlet-runtime.js
-./node_modules/.bin/browserify dist/standalone-full.js -o component/hamlet-full.js
+./node_modules/.bin/browserify \
+  dist/runtime.js \
+  --standalone Hamlet \
+  -o component/hamlet-runtime.js
+
+./node_modules/.bin/browserify \
+  dist/standalone-full.js \
+  -o component/hamlet-full.js
