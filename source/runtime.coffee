@@ -99,7 +99,8 @@ valueBind = (element, value, context) ->
         value(element.value)
 
       bindObservable element, value, context, (newValue) ->
-        element.value = newValue
+        unless element.value is newValue
+          element.value = newValue
 
   return
 
