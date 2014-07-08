@@ -46,9 +46,12 @@ isFragment = (node) ->
   node?.nodeType is 11
 
 initContent = (element) ->
-  return element._hamlet_content if element._hamlet_content
+  try
+    return element._hamlet_content if element._hamlet_content
 
-  allContent = (element._hamlet_content ?= Observable.concat())
+    allContent = (element._hamlet_content ?= Observable.concat())
+  catch # IE8 doesn't allow this property on TextNodes
+    []
 
   update = ->
     # TODO: Make sure we're not wiping out any binding we wanted to keep
