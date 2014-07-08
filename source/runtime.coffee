@@ -46,12 +46,9 @@ isFragment = (node) ->
   node?.nodeType is 11
 
 initContent = (element) ->
-  try
-    return element._hamlet_content if element._hamlet_content
+  return element._hamlet_content if element._hamlet_content
 
-    allContent = (element._hamlet_content ?= Observable.concat())
-  catch # IE8 doesn't allow this property on TextNodes
-    []
+  allContent = (element._hamlet_content ?= Observable.concat())
 
   update = ->
     # TODO: Make sure we're not wiping out any binding we wanted to keep
@@ -158,7 +155,8 @@ bindObservable = (element, value, context, update) ->
 
   observe()
 
-  (element._hamlet_cleanup ||= []).push unobserve
+  try # IE8 can't handle this on text nodes
+    (element._hamlet_cleanup ||= []).push unobserve
 
   return element
 
