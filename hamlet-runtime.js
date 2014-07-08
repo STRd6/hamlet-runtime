@@ -18,14 +18,10 @@
 
   initContent = function(element) {
     var allContent, update;
-    try {
-      if (element._hamlet_content) {
-        return element._hamlet_content;
-      }
-      allContent = (element._hamlet_content != null ? element._hamlet_content : element._hamlet_content = Observable.concat());
-    } catch (_error) {
-      [];
+    if (element._hamlet_content) {
+      return element._hamlet_content;
     }
+    allContent = (element._hamlet_content != null ? element._hamlet_content : element._hamlet_content = Observable.concat());
     update = function() {
       empty(element);
       return allContent.each(function(item) {
@@ -135,7 +131,9 @@
       return observable.stopObserving(update);
     };
     observe();
-    (element._hamlet_cleanup || (element._hamlet_cleanup = [])).push(unobserve);
+    try {
+      (element._hamlet_cleanup || (element._hamlet_cleanup = [])).push(unobserve);
+    } catch (_error) {}
     return element;
   };
 
