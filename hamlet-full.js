@@ -18,10 +18,14 @@
 
   initContent = function(element) {
     var allContent, update;
-    if (element._hamlet_content) {
-      return element._hamlet_content;
+    try {
+      if (element._hamlet_content) {
+        return element._hamlet_content;
+      }
+      allContent = (element._hamlet_content != null ? element._hamlet_content : element._hamlet_content = Observable.concat());
+    } catch (_error) {
+      [];
     }
-    allContent = (element._hamlet_content != null ? element._hamlet_content : element._hamlet_content = Observable.concat());
     update = function() {
       empty(element);
       return allContent.each(function(item) {
