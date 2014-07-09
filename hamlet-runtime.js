@@ -106,7 +106,7 @@
             });
             optionName = (value != null ? value.name : void 0) || value;
             bindObservable(option, optionName, value, function(newValue) {
-              return option.textContent = option.text = newValue;
+              return option.textContent = option.innerText = newValue;
             });
             element.appendChild(option);
             if (value === element._value) {
@@ -387,7 +387,7 @@
 },{}],3:[function(_dereq_,module,exports){
 module.exports={
   "name": "hamlet-runtime",
-  "version": "0.6.0-pre.16",
+  "version": "0.6.0-pre.17",
   "devDependencies": {
     "browserify": "^4.1.11",
     "coffee-script": "~1.7.1",
