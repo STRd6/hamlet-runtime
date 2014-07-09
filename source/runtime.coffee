@@ -383,6 +383,7 @@ Runtime = (context) ->
 
   return self
 
+Runtime.VERSION = require("../package.json").version
 Runtime.Observable = Observable
 module.exports = Runtime
 
