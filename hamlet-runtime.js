@@ -106,7 +106,7 @@
             });
             optionName = (value != null ? value.name : void 0) || value;
             bindObservable(option, optionName, value, function(newValue) {
-              return option.textContent = newValue;
+              return option.textContent = option.text = newValue;
             });
             element.appendChild(option);
             if (value === element._value) {
