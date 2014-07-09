@@ -134,7 +134,8 @@ specialBindings =
 
           optionName = value?.name or value
           bindObservable option, optionName, value, (newValue) ->
-            option.textContent = newValue
+            # IE8 likes option.text better
+            option.textContent = option.text = newValue
 
           element.appendChild option
           element.selectedIndex = index if value is element._value
