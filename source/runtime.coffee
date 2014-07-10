@@ -95,8 +95,8 @@ valueBind = (element, value, context) ->
       # Because firing twice with the same value is idempotent just binding both
       # oninput and onchange handles the widest range of inputs and browser
       # inconsistencies.
-      # IE9 has poor oninput support so we also add onselectionchange
-      element.oninput = element.onchange = element.ononselectionchange = ->
+      # IE9 has poor oninput support so we also add onpropertychange
+      element.oninput = element.onchange = element.onpropertychange = ->
         value(element.value)
 
       bindObservable element, value, context, (newValue) ->
