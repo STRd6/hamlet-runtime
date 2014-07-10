@@ -63,9 +63,16 @@
         bindObservable(element, value, context, update);
         break;
       default:
-        element.oninput = element.onchange = element.onpropertychange = function() {
+        element.oninput = element.onchange = function() {
           return value(element.value);
         };
+        if (typeof element.attachEvent === "function") {
+          element.attachEvent("onkeydown", function() {
+            return setTimeout(function() {
+              return value(element.value);
+            }, 0);
+          });
+        }
         bindObservable(element, value, context, function(newValue) {
           if (element.value !== newValue) {
             return element.value = newValue;
@@ -896,7 +903,7 @@ var parser=function(){var parser={trace:function trace(){},yy:{},symbols_:{error
 },{}],12:[function(require,module,exports){
 module.exports={
   "name": "hamlet-runtime",
-  "version": "0.6.0-pre.20",
+  "version": "0.6.0-pre.21",
   "devDependencies": {
     "browserify": "^4.1.11",
     "coffee-script": "~1.7.1",
