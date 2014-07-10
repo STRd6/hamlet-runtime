@@ -98,6 +98,13 @@ valueBind = (element, value, context) ->
       element.oninput = element.onchange = ->
         value(element.value)
 
+      # IE9 has poor oninput support so we also add a keydown event
+      # We could use keyup but the lag is noticeable
+      element.attachEvent? "onkeydown", ->
+        setTimeout ->
+          value(element.value)
+        , 0
+
       bindObservable element, value, context, (newValue) ->
         unless element.value is newValue
           element.value = newValue
@@ -134,7 +141,9 @@ specialBindings =
 
           optionName = value?.name or value
           bindObservable option, optionName, value, (newValue) ->
-            option.textContent = newValue
+            # Ideally this should only be option.textContent
+            # but that fails in IE8
+            option.textContent = option.innerText = newValue
 
           element.appendChild option
           element.selectedIndex = index if value is element._value
@@ -155,7 +164,8 @@ bindObservable = (element, value, context, update) ->
 
   observe()
 
-  (element._hamlet_cleanup ||= []).push unobserve
+  try # IE8 can't handle this on text nodes
+    (element._hamlet_cleanup ||= []).push unobserve
 
   return element
 
@@ -381,6 +391,7 @@ Runtime = (context) ->
 
   return self
 
+Runtime.VERSION = require("../package.json").version
 Runtime.Observable = Observable
 module.exports = Runtime
 
