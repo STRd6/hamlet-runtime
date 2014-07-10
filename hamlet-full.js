@@ -63,7 +63,7 @@
         bindObservable(element, value, context, update);
         break;
       default:
-        element.oninput = element.onchange = element.ononselectionchange = function() {
+        element.oninput = element.onchange = element.onpropertychange = function() {
           return value(element.value);
         };
         bindObservable(element, value, context, function(newValue) {
@@ -896,7 +896,7 @@ var parser=function(){var parser={trace:function trace(){},yy:{},symbols_:{error
 },{}],12:[function(require,module,exports){
 module.exports={
   "name": "hamlet-runtime",
-  "version": "0.6.0-pre.19",
+  "version": "0.6.0-pre.20",
   "devDependencies": {
     "browserify": "^4.1.11",
     "coffee-script": "~1.7.1",
