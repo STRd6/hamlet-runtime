@@ -95,9 +95,15 @@ valueBind = (element, value, context) ->
       # Because firing twice with the same value is idempotent just binding both
       # oninput and onchange handles the widest range of inputs and browser
       # inconsistencies.
-      # IE9 has poor oninput support so we also add onpropertychange
-      element.oninput = element.onchange = element.onpropertychange = ->
+      element.oninput = element.onchange = ->
         value(element.value)
+
+      # IE9 has poor oninput support so we also add a keydown event
+      # We could use keyup but the lag is noticeable
+      element.attachEvent? "onkeydown", ->
+        setTimeout ->
+          value(element.value)
+        , 0
 
       bindObservable element, value, context, (newValue) ->
         unless element.value is newValue
