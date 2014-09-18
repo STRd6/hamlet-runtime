@@ -227,47 +227,28 @@ Runtime = (context) ->
   id = (sources...) ->
     element = top()
 
-    update = (newValue) ->
-      if typeof newValue is "function"
-        newValue = newValue()
+    value = Observable.concat sources...
 
-      element.id = newValue
+    update = (newId) ->
+      element.id = newId
 
-    value = ->
-      possibleValues = sources.map (source) ->
-        if typeof source is "function"
-          source()
-        else
-          source
-      .filter (idValue) ->
-        idValue?
+    lastId = ->
+      value.last()
 
-      possibleValues[possibleValues.length-1]
-
-    bindObservable(element, value, context, update)
+    bindObservable(element, lastId, context, update)
 
   classes = (sources...) ->
     element = top()
 
-    update = (newValue) ->
-      if typeof newValue is "function"
-        newValue = newValue()
+    value = Observable.concat sources.map((source) -> Observable(source, context))...
 
-      element.className = newValue
+    update = (classNames) ->
+      element.className = classNames
 
-    do (context) ->
-      value = ->
-        possibleValues = sources.map (source) ->
-          if typeof source is "function"
-            source.call(context)
-          else
-            source
-        .filter (sourceValue) ->
-          sourceValue?
+    classNames = ->
+      value.join(" ")
 
-        possibleValues.join(" ")
-
-      bindObservable(element, value, context, update)
+    bindObservable(element, classNames, context, update)
 
   observeAttribute = (name, value) ->
     element = top()
