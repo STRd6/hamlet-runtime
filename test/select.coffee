@@ -1,6 +1,6 @@
 describe "SELECT", ->
   template = makeTemplate """
-    %select(value=@value options=@options)
+    %select(@value @options)
   """
   describe "with an array of basic types for options", ->
     it "should generate options", ->
@@ -9,6 +9,7 @@ describe "SELECT", ->
         value: 2
       behave template(model), ->
         assert.equal all("option").length, model.options.length
+
     it "should have it's value set", ->
       model =
         options: [1, 2, 3]
@@ -36,8 +37,9 @@ describe "SELECT", ->
 
   it "should get the correct value when another bound input changes", ->
     t = makeTemplate("""
-      %select(@value @options)
-      %input(@value)
+      %div
+        %select(@value @options)
+        %input(@value)
     """)
     m =
       options: [1, 2, 3]
@@ -48,10 +50,13 @@ describe "SELECT", ->
 
       input.value = "3"
       input.oninput()
+
+      console.log "watt"
+
       assert.equal m.value(), 3
 
       assert.equal Q("select").value, 3
-
+      console.log "yolo!"
       m.value 1
       assert.equal Q("select").value, 1
 

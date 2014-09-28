@@ -1,8 +1,9 @@
 describe "Computed", ->
   template = makeTemplate """
-    %h2= @name
-    %input(value=@first)
-    %input(value=@last)
+    %div
+      %h2= @name
+      %input(value=@first)
+      %input(value=@last)
   """
 
   it "should compute automatically with the correct scope", ->
@@ -34,7 +35,7 @@ describe "Computed", ->
   it "should have the correct context in each", ->
     template = makeTemplate """
       .items
-        - each @items, ->
+        - @items.each (item) ->
           .item
             .name= @name
             %input(type='checkbox' checked=@checked)

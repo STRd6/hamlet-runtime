@@ -54,3 +54,17 @@ describe "ids", ->
       assert.equal all("#other").length, 0
       model.id null
       assert.equal all("#wat").length, 1
+
+  it "should be bound in the context of the object", ->
+    template = makeTemplate """
+      .duder(@id)
+    """
+
+    model =
+      id: ->
+        @myId()
+      myId: ->
+        "hats"
+
+    behave template(model), ->
+      assert.equal all("#hats").length, 1

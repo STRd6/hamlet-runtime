@@ -1,11 +1,12 @@
 describe "multiple bindings", ->
   template = makeTemplate """
-    %input(type="text" value=@value)
-    %select(value=@value options=[1..@max])
-    %hr
-    %input(type="range" value=@value min="1" max=@max)
-    %hr
-    %progress(value=@value max=@max)
+    %div
+      %input(type="text" value=@value)
+      %select(value=@value options=[1..@max])
+      %hr
+      %input(type="range" value=@value min="1" max=@max)
+      %hr
+      %progress(value=@value max=@max)
   """
   model =
     max: 10
@@ -21,13 +22,15 @@ describe "multiple bindings", ->
       assert.equal document.querySelector("progress").value, 5
       assert.equal select.value, 5
 
-      # TODO: Wonder if there is a better way to simulate change events
-      select.value = 1
-      select.onchange()
+      [2, 7, 3, 8].forEach (value) ->
+        # TODO: Wonder if there is a better way to simulate change events
 
-      assert.equal select.value, 1
+        select.value = value
+        select.onchange()
 
-      ["text", "range"].forEach (type) ->
-        assert.equal document.querySelector("input[type='#{type}']").value, 1
+        assert.equal select.value, value
 
-      assert.equal document.querySelector("progress").value, 1
+        ["text", "range"].forEach (type) ->
+          assert.equal document.querySelector("input[type='#{type}']").value, value
+
+        assert.equal document.querySelector("progress").value, value

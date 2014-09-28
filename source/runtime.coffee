@@ -1,3 +1,5 @@
+"use strict"
+
 Observable = require "o_0"
 
 eventNames = """
@@ -129,7 +131,7 @@ specialBindings =
 
         # TODO: Handle key: value... style options
         values.map (value, index) ->
-          option = document.createElement("option")
+          option = createElement("option")
           option._value = value
           if typeof value is "object"
             optionValue = value?.value or index
@@ -152,6 +154,34 @@ specialBindings =
 
       bindObservable element, values, context, updateValues
 
+observeAttribute = (element, context, name, value) ->
+  {nodeName} = element
+
+  # TODO: Consolidate special bindings better than if/else
+  if (name is "value")
+    valueBind(element, value)
+  else if binding = specialBindings[nodeName]?[name]
+    binding(element, value, context)
+  # Straight up onclicks, etc.
+  else if name.match(/^on/) and isEvent(name.substr(2))
+    bindEvent(element, name, value, context)
+  # Handle click=@method
+  else if isEvent(name)
+    bindEvent(element, "on#{name}", value, context)
+  else
+    bindObservable element, value, context, (newValue) ->
+      if newValue? and newValue != false
+        element.setAttribute name, newValue
+      else
+        element.removeAttribute name
+
+  return element
+
+observeAttributes = (element, context, attributes) ->
+  Object.keys(attributes).forEach (name) ->
+    value = attributes[name]
+    observeAttribute element, context, name, value
+
 bindObservable = (element, value, context, update) ->
   observable = Observable(value, context)
 
@@ -164,211 +194,130 @@ bindObservable = (element, value, context, update) ->
 
   observe()
 
-  try # IE8 can't handle this on text nodes
-    (element._hamlet_cleanup ||= []).push unobserve
-
   return element
 
 bindEvent = (element, name, fn, context) ->
   element[name] = ->
     fn.apply(context, arguments)
 
-cleanup = (element) ->
-  Array::forEach.call element.children, cleanup
+id = (element, context, sources) ->
+  value = Observable.concat sources.map((source) -> Observable(source, context))...
 
-  element._hamlet_cleanup?.forEach (method) ->
-    method()
+  update = (newId) ->
+    element.id = newId
 
-  delete element._hamlet_cleanup
+  lastId = ->
+    value.last()
 
-  return
+  bindObservable(element, lastId, context, update)
+
+classes = (element, context, sources) ->
+  value = Observable.concat sources.map((source) -> Observable(source, context))...
+
+  update = (classNames) ->
+    element.className = classNames
+
+  classNames = ->
+    value.join(" ")
+
+  bindObservable(element, classNames, context, update)
+
+createElement = (name) ->
+  document.createElement name
+
+observeContent = (element, context, contentFn) ->
+  # TODO: Don't even try to observe contents for empty functions
+
+  observableContentsFn = Observable ->
+    contents = Observable.concat()
+
+    # TODO: Make sure control flow observables work
+    # May need to wrap this in an observable function which
+    # returns the observable array of contents and bind to
+    # both update events
+    contentFn.call context,
+      buffer: bufferTo(context, contents)
+      element: makeElement
+
+    return contents
+  , context
+
+  currentContents = observableContentsFn()
+
+  update = ->
+    # TODO: Zipper merge optimization to more efficiently modify the DOM
+    empty element
+
+    currentContents.each (item) ->
+      if typeof item is "string"
+        element.appendChild document.createTextNode item
+      else if typeof item is "number"
+        element.appendChild document.createTextNode item
+      else
+        element.appendChild item
+
+  # Observe changes in entire function and bind to a new contents set
+  observableContentsFn.observe (newContents) ->
+    currentContents.stopObserving update
+    currentContents = newContents
+    currentContents.observe update
+
+    update()
+
+  # Observe currentContents and update element
+  currentContents.observe update
+  update()
+
+bufferTo = (context, collection) ->
+  (content) ->
+    if typeof content is 'function'
+      content = Observable(content, context)
+
+    collection.push content
+
+    return content
+
+makeElement = (name, context, attributes={}, fn) ->
+  element = createElement name
+
+  # This magic hack will encapsulate observable changes from bubling
+  # outside of this element
+  # This function auto-invokes and blocks any autobinding from leaving
+  # this element
+  Observable ->
+    if attributes.id?
+      id(element, context, attributes.id)
+      delete attributes.id
+
+    if attributes.class?
+      classes(element, context, attributes.class)
+      delete attributes.class
+
+    # TODO: Need to ensure that attribute changes don't cause a rerender of
+    # entire section!
+    observeAttributes(element, context, attributes)
+
+    # TODO: Maybe have a flag for element contents that are created from
+    # attributes rather than special casing this
+    unless element.nodeName is "SELECT"
+      observeContent(element, context, fn)
+
+  return element
 
 Runtime = (context) ->
-  stack = []
-
-  # HAX: A document fragment is not your real dad
-  lastParent = ->
-    i = stack.length - 1
-    while (element = stack[i]) and isFragment(element)
-      i -= 1
-
-    element
-
-  contextTop = undefined
-  top = ->
-    stack[stack.length-1] or contextTop
-
-  append = (child) ->
-    parent = top()
-
-    # TODO: This seems a little gross
-    # The problem is that in each blocks our fragments are being emptied
-    # because they are appended to the parent before we return
-    # By appending and returning the child instead we should be able to
-    # keep a reference to the actual elements
-    if isFragment(child) and child.childNodes.length is 1
-      child = child.childNodes[0]
-
-    # TODO: We shouldn't have to use this soak
-    top()?.appendChild(child)
-
-    return child
-
-  push = (child) ->
-    stack.push(child)
-
-  pop = ->
-    append(stack.pop())
-
-  render = (child) ->
-    push(child)
-    pop()
-
-  id = (sources...) ->
-    element = top()
-
-    value = Observable.concat sources...
-
-    update = (newId) ->
-      element.id = newId
-
-    lastId = ->
-      value.last()
-
-    bindObservable(element, lastId, context, update)
-
-  classes = (sources...) ->
-    element = top()
-
-    value = Observable.concat sources.map((source) -> Observable(source, context))...
-
-    update = (classNames) ->
-      element.className = classNames
-
-    classNames = ->
-      value.join(" ")
-
-    bindObservable(element, classNames, context, update)
-
-  observeAttribute = (name, value) ->
-    element = top()
-
-    {nodeName} = element
-
-    # TODO: Consolidate special bindings better than if/else
-    if (name is "value")
-      valueBind(element, value)
-    else if binding = specialBindings[nodeName]?[name]
-      binding(element, value, context)
-    # Straight up onclicks, etc.
-    else if name.match(/^on/) and isEvent(name.substr(2))
-      bindEvent(element, name, value, context)
-    # Handle click=@method
-    else if isEvent(name)
-      bindEvent(element, "on#{name}", value, context)
-    else
-      bindObservable element, value, context, (newValue) ->
-        if newValue? and newValue != false
-          element.setAttribute name, newValue
-        else
-          element.removeAttribute name
-
-    return element
-
-  # TODO: This is getting a little out of hand with complexity
-  # switching out text/render would be a smart move
-  observeText = (value) ->
-    # HACK: We don't really want to know about the document inside here.
-    # Creating our text nodes in here cleans up the external call
-    # so it may be worth it.
-    element = document.createTextNode('')
-
-    update = (newValue) ->
-      element.nodeValue = newValue
-
-    bindObservable element, value, context, update
-
-    render element
-
-  withContext = (newContext, newContextTop, fn) ->
-    oldContext = context
-    context = newContext
-
-    contextTop = newContextTop
-    try
-      fn()
-    finally
-      contextTop = undefined
-      context = oldContext
-
-  buffer = (value) ->
-    # TODO: context isn't the same when this is updated from an observable
-    value = Observable value, context
-
-    # Kind of a hack for handling sub renders
-    # or adding explicit html nodes to the output
-    # TODO: May want to make more sure that it's a real dom node
-    #       and not some other object with a nodeType property
-    # TODO: Think about how this should work with observable nodes
-    switch value()?.nodeType
-      when 1, 3, 11
-        # TODO: top() isn't the same when this is updated from an observable!
-        contentBind top(), value
-
-        # TODO: Hack so this works with each
-        return value()
-
-    # TODO: One more hack to handle lists of nodes
-    switch value()?[0]?.nodeType
-      when 1, 3, 11
-        # TODO: Currently is broken when used with `each`
-        return contentBind top(), value
-
-    return observeText(value)
-
   self =
-    # Pushing and popping creates the node tree
-    push: push
-    pop: pop
+    # TODO: May be able to consolidate some of this with the
+    # element contents stuff
+    buffer: (content) ->
+      if self.root
+        throw "Cannot have multiple root elements"
 
-    id: id
-    classes: classes
-    attribute: observeAttribute
-    # TODO: Rename `text` to `buffer`
-    text: buffer
+      self.root = content
+
+    element: makeElement
 
     filter: (name, content) ->
       ; # TODO self.filters[name](content)
-
-    each: (items, fn) ->
-      items = Observable(items, context)
-      elements = null
-      parent = lastParent()
-
-      # TODO: Work when rendering many sibling elements
-      items.observe ->
-        replace elements
-
-      replace = (oldElements) ->
-        elements = []
-        items.each (item, index, array) ->
-          element = null
-
-          withContext item, parent, ->
-            element = fn.call(item, item, index, array)
-
-          if isFragment(element)
-            elements.push element.childNodes...
-          else
-            elements.push element
-
-          parent.appendChild element
-
-          return element
-
-        oldElements?.forEach remove
-
-      replace(null, items)
 
   return self
 
@@ -396,8 +345,8 @@ valueIndexOf = (options, value) ->
       option.toString()
     .indexOf value.toString()
 
-remove = (element) ->
-  cleanup element
-  element.parentNode?.removeChild(element)
-
-  return
+get = (x) ->
+  if typeof x is 'function'
+    x()
+  else
+    x
