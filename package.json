@@ -1,10 +1,10 @@
 {
   "name": "hamlet-runtime",
-  "version": "0.6.0-pre.21",
+  "version": "0.7.0-pre.0",
   "devDependencies": {
     "browserify": "^4.1.11",
     "coffee-script": "~1.7.1",
-    "hamlet-compiler": "~0.6.0-pre.11",
+    "hamlet-compiler": "0.7.0-pre.0",
     "jsdom": "^0.10.5",
     "mocha": "~1.12.0",
     "uglify-js": "~2.3.6"
