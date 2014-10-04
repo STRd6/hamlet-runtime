@@ -14,23 +14,22 @@ describe "multiple bindings", ->
 
   it "should be initialized to the right values", ->
     behave template(model), ->
-      select = document.querySelector("select")
+      select = Q("select")
 
       ["text", "range"].forEach (type) ->
-        assert.equal document.querySelector("input[type='#{type}']").value, 5
+        assert.equal Q("input[type='#{type}']").value, 5
 
-      assert.equal document.querySelector("progress").value, 5
+      assert.equal Q("progress").value, 5
       assert.equal select.value, 5
 
       [2, 7, 3, 8].forEach (value) ->
-        # TODO: Wonder if there is a better way to simulate change events
-
-        select.value = value
+        # NOTE: This is how we're simulating an onchange event
+        select.selectedIndex = value - 1
         select.onchange()
 
         assert.equal select.value, value
 
         ["text", "range"].forEach (type) ->
-          assert.equal document.querySelector("input[type='#{type}']").value, value
+          assert.equal Q("input[type='#{type}']").value, value
 
-        assert.equal document.querySelector("progress").value, value
+        assert.equal Q("progress").value, value

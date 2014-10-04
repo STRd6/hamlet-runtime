@@ -70,46 +70,47 @@ contentBind = (element, value) ->
   return element
 
 valueBind = (element, value, context) ->
-  value = Observable value, context
+  Observable -> # TODO: Not sure if this is absolutely necessary or the best place for this
+    value = Observable value, context
 
-  switch element.nodeName
-    when "SELECT"
-      element.oninput = element.onchange = ->
-        {value:optionValue, _value} = @children[@selectedIndex]
+    switch element.nodeName
+      when "SELECT"
+        element.oninput = element.onchange = ->
+          {value:optionValue, _value} = @children[@selectedIndex]
 
-        value(_value or optionValue)
+          value(_value or optionValue)
 
-      update = (newValue) ->
-        # This is so we can hold a non-string object as a value of the select element
-        element._value = newValue
+        update = (newValue) ->
+          # This is so we can hold a non-string object as a value of the select element
+          element._value = newValue
 
-        if (options = element._options)
-          if newValue.value?
-            # TODO: Handle observable value attributes
-            element.value = newValue.value?() or newValue.value
+          if (options = element._options)
+            if newValue.value?
+              # TODO: Handle observable value attributes
+              element.value = newValue.value?() or newValue.value
+            else
+              element.selectedIndex = valueIndexOf options, newValue
           else
-            element.selectedIndex = valueIndexOf options, newValue
-        else
-          element.value = newValue
+            element.value = newValue
 
-      bindObservable element, value, context, update
-    else
-      # Because firing twice with the same value is idempotent just binding both
-      # oninput and onchange handles the widest range of inputs and browser
-      # inconsistencies.
-      element.oninput = element.onchange = ->
-        value(element.value)
-
-      # IE9 has poor oninput support so we also add a keydown event
-      # We could use keyup but the lag is noticeable
-      element.attachEvent? "onkeydown", ->
-        setTimeout ->
+        bindObservable element, value, context, update
+      else
+        # Because firing twice with the same value is idempotent just binding both
+        # oninput and onchange handles the widest range of inputs and browser
+        # inconsistencies.
+        element.oninput = element.onchange = ->
           value(element.value)
-        , 0
 
-      bindObservable element, value, context, (newValue) ->
-        unless element.value is newValue
-          element.value = newValue
+        # IE9 has poor oninput support so we also add a keydown event
+        # We could use keyup but the lag is noticeable
+        element.attachEvent? "onkeydown", ->
+          setTimeout ->
+            value(element.value)
+          , 0
+
+        bindObservable element, value, context, (newValue) ->
+          unless element.value is newValue
+            element.value = newValue
 
   return
 
@@ -252,6 +253,8 @@ observeContent = (element, context, contentFn) ->
       if typeof item is "string"
         element.appendChild document.createTextNode item
       else if typeof item is "number"
+        element.appendChild document.createTextNode item
+      else if typeof item is "boolean"
         element.appendChild document.createTextNode item
       else
         element.appendChild item
