@@ -12,7 +12,7 @@ describe "Filters", ->
   it "should provide :javascript", ->
     template = makeTemplate """
       :javascript
-        a = "jawsome";
+        var a = "jawsome";
       %div(type=a)
     """
 
@@ -32,10 +32,11 @@ describe "Filters", ->
 
     it "should work with indentation", ->
       template = makeTemplate """
-        :verbatim
-          Hey
-            It's
-              Indented
+        %div
+          :verbatim
+            Hey
+              It's
+                Indented
 
       """
 
@@ -43,25 +44,28 @@ describe "Filters", ->
         # TODO: This probably shouldn't have a trailing \n
         assert.equal Q("body").textContent, "Hey\n  It's\n    Indented\n"
 
-    it "should work with indentation without extra trailing whitespace"
-    # TODO
-    ->
+    it "should work with indentation without extra trailing whitespace", ->
+      whitespace = "    "
       template = makeTemplate """
-        :verbatim
-          Hey
-            It's
-              Indented
+        %div
+          :verbatim
+            Hey
+              It's#{whitespace}
+                Indented
+
       """
+      # TODO/NOTE: Must have blank line after filters otherwise they mess up indentation
 
       behave template(), ->
-        assert.equal Q("body").textContent, "Hey\n  It's\n    Indented"
+        assert.equal Q("body").textContent, "Hey\n  It's    \n    Indented\n"
 
     it "should work with \"\"\"", ->
       template = makeTemplate """
-        :verbatim
-          sample = \"\"\"
-            Hey
-          \"\"\"
+        %div
+          :verbatim
+            sample = \"\"\"
+              Hey
+            \"\"\"
 
       """
 

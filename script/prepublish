@@ -1,6 +1,4 @@
 #!/bin/bash
 set -e
 
-script/test
-
 ./node_modules/.bin/coffee -co dist/ source/

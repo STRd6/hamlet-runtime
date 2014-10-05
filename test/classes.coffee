@@ -12,6 +12,25 @@ describe "Classes", ->
 
     behave template(model), ->
       assert Q(".hats")
-  it "should handle observable arrays"
 
-  it "should merge with literal classes"
+  it "should handle observable arrays", ->
+    template = makeTemplate """
+      %div(class=@classes)
+    """
+
+    model =
+      classes: Observable ["a", "b"]
+
+    behave template(model), ->
+      assert Q(".a.b")
+
+  it "should merge with literal classes", ->
+    template = makeTemplate """
+      .duder(class=@classes)
+    """
+
+    model =
+      classes: Observable ["a", "b"]
+
+    behave template(model), ->
+      assert Q(".duder.a.b")

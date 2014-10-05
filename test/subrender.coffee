@@ -140,12 +140,33 @@ describe "subrender", ->
         assert.equal Q("li")[0].textContent, "yo"
 
   describe "rendering subtemplates", ->
-    describe "with root node, but no root in each", ->
+    describe "mixing and matching", ->
+      subtemplate = makeTemplate """
+        %span Hello
+      """
       template = makeTemplate """
+        %div
+          %a Radical
+          = @subtemplate()
+          = @observable
+      """
+
+      it "shouldn't lose any nodes", ->
+        model =
+          observable: Observable "wat"
+          subtemplate: subtemplate
+
+        behave template(model), ->
+          assert.equal Q("div").textContent, "Radical\nHello\nwat"
+          model.observable "duder"
+          assert.equal Q("div").textContent, "Radical\nHello\nduder"
+
+    describe "mapping array to subtemplates", ->
+      template = makeTemplate """
+        - subtemplate = @subtemplate
+
         %table
-          - subtemplate = @subtemplate
-          - each @rows, (row) ->
-            = subtemplate(row)
+          = @rows.map subtemplate
       """
 
       it "should render subtemplates", ->
@@ -193,8 +214,9 @@ describe "subrender", ->
 
     describe "without root node", ->
       template = makeTemplate """
-        = @sub1()
-        = @sub2()
+        %div
+          = @sub1()
+          = @sub2()
       """
 
       it "should render both subtemplates", ->
