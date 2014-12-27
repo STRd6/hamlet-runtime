@@ -34,3 +34,14 @@ describe "Classes", ->
 
     behave template(model), ->
       assert Q(".duder.a.b")
+
+  it "should not write `undefined` to the class", ->
+    template = makeTemplate """
+      .duder(class=@undefined)
+    """
+
+    model =
+      undefined: undefined
+
+    behave template(model), ->
+      assert !Q(".undefined")

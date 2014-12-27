@@ -47,28 +47,6 @@ isEvent = (name) ->
 isFragment = (node) ->
   node?.nodeType is 11
 
-initContent = (element) ->
-  return element._hamlet_content if element._hamlet_content
-
-  allContent = (element._hamlet_content ?= Observable.concat())
-
-  update = ->
-    # TODO: Make sure we're not wiping out any binding we wanted to keep
-    empty(element)
-    allContent.each (item) ->
-      element.appendChild(item)
-
-  bindObservable element, allContent, null, update
-
-  return allContent
-
-# TODO: Make sure to handle rendering multiple sibling contents correctly
-# currently just crushes the others
-contentBind = (element, value) ->
-  initContent(element).push value
-
-  return element
-
 valueBind = (element, value, context) ->
   Observable -> # TODO: Not sure if this is absolutely necessary or the best place for this
     value = Observable value, context
@@ -228,48 +206,33 @@ createElement = (name) ->
 
 observeContent = (element, context, contentFn) ->
   # TODO: Don't even try to observe contents for empty functions
+  contents = []
 
-  observableContentsFn = Observable ->
-    contents = Observable.concat()
+  contentFn.call context,
+    buffer: bufferTo(context, contents)
+    element: makeElement
 
-    # TODO: Make sure control flow observables work
-    # May need to wrap this in an observable function which
-    # returns the observable array of contents and bind to
-    # both update events
-    contentFn.call context,
-      buffer: bufferTo(context, contents)
-      element: makeElement
+  append = (item) ->
+    if typeof item is "string"
+      element.appendChild document.createTextNode item
+    else if typeof item is "number"
+      element.appendChild document.createTextNode item
+    else if typeof item is "boolean"
+      element.appendChild document.createTextNode item
+    else if typeof item.each is "function"
+      item.each append
+    else if typeof item.forEach is "function"
+      item.forEach append
+    else
+      element.appendChild item
 
-    return contents
-  , context
-
-  currentContents = observableContentsFn()
-
-  update = ->
+  update = (contents) ->
     # TODO: Zipper merge optimization to more efficiently modify the DOM
     empty element
 
-    currentContents.each (item) ->
-      if typeof item is "string"
-        element.appendChild document.createTextNode item
-      else if typeof item is "number"
-        element.appendChild document.createTextNode item
-      else if typeof item is "boolean"
-        element.appendChild document.createTextNode item
-      else
-        element.appendChild item
+    contents.forEach append
 
-  # Observe changes in entire function and bind to a new contents set
-  observableContentsFn.observe (newContents) ->
-    currentContents.stopObserving update
-    currentContents = newContents
-    currentContents.observe update
-
-    update()
-
-  # Observe currentContents and update element
-  currentContents.observe update
-  update()
+  update contents
 
 bufferTo = (context, collection) ->
   (content) ->
@@ -304,6 +267,7 @@ makeElement = (name, context, attributes={}, fn) ->
     # attributes rather than special casing this
     unless element.nodeName is "SELECT"
       observeContent(element, context, fn)
+  , context
 
   return element
 
