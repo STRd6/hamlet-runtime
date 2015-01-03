@@ -248,6 +248,7 @@ makeElement = (name, context, attributes={}, fn) ->
 
   # This magic hack will encapsulate observable changes from bubling
   # outside of this element
+  # Each of these Observable -> sections localizes re-renders
   # This function auto-invokes and blocks any autobinding from leaving
   # this element
   Observable ->
@@ -255,19 +256,23 @@ makeElement = (name, context, attributes={}, fn) ->
       id(element, context, attributes.id)
       delete attributes.id
 
+  Observable ->
     if attributes.class?
       classes(element, context, attributes.class)
       delete attributes.class
 
-    # TODO: Need to ensure that attribute changes don't cause a rerender of
-    # entire section!
+  # TODO: Need to ensure that attribute changes don't cause a rerender of
+  # entire section!
+  Observable ->
     observeAttributes(element, context, attributes)
-
-    # TODO: Maybe have a flag for element contents that are created from
-    # attributes rather than special casing this
-    unless element.nodeName is "SELECT"
-      observeContent(element, context, fn)
   , context
+
+  # TODO: Maybe have a flag for element contents that are created from
+  # attributes rather than special casing this
+  unless element.nodeName is "SELECT"
+    Observable ->
+      observeContent(element, context, fn)
+    , context
 
   return element
 
