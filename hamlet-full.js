@@ -238,17 +238,23 @@
     Observable(function() {
       if (attributes.id != null) {
         id(element, context, attributes.id);
-        delete attributes.id;
+        return delete attributes.id;
       }
+    });
+    Observable(function() {
       if (attributes["class"] != null) {
         classes(element, context, attributes["class"]);
-        delete attributes["class"];
+        return delete attributes["class"];
       }
-      observeAttributes(element, context, attributes);
-      if (element.nodeName !== "SELECT") {
-        return observeContent(element, context, fn);
-      }
+    });
+    Observable(function() {
+      return observeAttributes(element, context, attributes);
     }, context);
+    if (element.nodeName !== "SELECT") {
+      Observable(function() {
+        return observeContent(element, context, fn);
+      }, context);
+    }
     return element;
   };
 
