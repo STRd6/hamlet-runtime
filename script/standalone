@@ -7,4 +7,5 @@
 
 ./node_modules/.bin/browserify \
   dist/standalone-full.js \
+  --standalone Hamlet \
   -o component/hamlet-full.js
