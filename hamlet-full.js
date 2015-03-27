@@ -1061,7 +1061,7 @@ var parser=function(){var parser={trace:function trace(){},yy:{},symbols_:{error
 },{}],12:[function(_dereq_,module,exports){
 module.exports={
   "name": "hamlet-runtime",
-  "version": "0.7.0-pre.2",
+  "version": "0.7.0",
   "devDependencies": {
     "browserify": "^4.1.11",
     "coffee-script": "~1.7.1",
